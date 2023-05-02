@@ -1,6 +1,7 @@
 package com.example.weatherapp.database;
 
 import androidx.room.Dao;
+import androidx.room.Delete;
 import androidx.room.Insert;
 import androidx.room.Query;
 
@@ -20,4 +21,7 @@ public interface CityDAO {
 
     @Query("SELECT * FROM city WHERE cityName= :cityName")
     List<City> checkCity(String cityName);
+
+    @Delete
+    void deleteCity(City city);
 }
