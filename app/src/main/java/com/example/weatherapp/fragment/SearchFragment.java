@@ -51,11 +51,13 @@ import java.util.TimeZone;
 public class SearchFragment extends Fragment {
 
     final String APP_ID = "bffca17bcb552b8c8e4f3b82f64cccd2";
+    double longitude;
+    double latitude;
     ImageView imageView;
     AutoCompleteTextView autoCompleteTextView;
     ImageButton imageButton;
     Button btnAdd;
-    TextView temptv, time, longitude, latitude, humidity, sunrise, sunset, pressure, wind, country, city_nam, max_temp, min_temp, feels, visibility;
+    TextView temptv, time, humidity, sunrise, sunset, pressure, wind, country, city_nam, max_temp, min_temp, feels, visibility, co, so2, pm2_5, air_quality;
     ArrayAdapter<String> arrayAdapter;
     RecyclerView rvWeatherForecast;
     private ArrayList<WeatherForecast> weatherForecastArrayList;
@@ -79,7 +81,7 @@ public class SearchFragment extends Fragment {
         btnAdd = view.findViewById(R.id.btn_add_city);
         imageView = view.findViewById(R.id.imageView);
         temptv = view.findViewById(R.id.textView3);
-        time = view.findViewById(R.id.textView2);
+       // time = view.findViewById(R.id.textView2);
 
         humidity = view.findViewById(R.id.humidity);
         pressure = view.findViewById(R.id.pressure);
@@ -88,14 +90,20 @@ public class SearchFragment extends Fragment {
         city_nam = view.findViewById(R.id.city_nam);
         sunrise = view.findViewById(R.id.sunrise);
         sunset = view.findViewById(R.id.sunset);
-        max_temp = view.findViewById(R.id.temp_max);
+        max_temp = view.findViewById(R.id.max_temp);
         min_temp = view.findViewById(R.id.min_temp);
         visibility = view.findViewById(R.id.visibility);
         feels = view.findViewById(R.id.feels);
+
         rvWeatherForecast = view.findViewById(R.id.rvWeatherForecast);
         weatherForecastArrayList = new ArrayList<>();
         weatherForecastAdapter = new WeatherForecastAdapter(getActivity(), weatherForecastArrayList);
         rvWeatherForecast.setAdapter(weatherForecastAdapter);
+
+        air_quality = view.findViewById(R.id.airQuality);
+        so2 = view.findViewById(R.id.so2);
+        co = view.findViewById(R.id.co);
+        pm2_5 = view.findViewById(R.id.pm2_5);
 
         String[] cities = getResources().getStringArray(R.array.cities);
         arrayAdapter = new ArrayAdapter<>(getActivity(), android.R.layout.simple_list_item_1, cities);
@@ -179,6 +187,14 @@ public class SearchFragment extends Fragment {
                             //String date = std.format(calendar.getTime());
                             //time.setText(date);
 
+                            //find latitude
+                            JSONObject object2 = jsonObject.getJSONObject("coord");
+                            latitude = object2.getDouble("lat");
+
+                            //find longitude
+                            JSONObject object3 = jsonObject.getJSONObject("coord");
+                            longitude = object3.getDouble("lon");
+
                             //find humidity
                             JSONObject object4 = jsonObject.getJSONObject("main");
                             int humidity_find = object4.getInt("humidity");
@@ -197,36 +213,38 @@ public class SearchFragment extends Fragment {
                             //find sunrise
                             JSONObject object5 = jsonObject.getJSONObject("sys");
                             Long sunrise_find = object5.getLong("sunrise");
-                            SimpleDateFormat std = new SimpleDateFormat("HH:mm");
-                            String sunrise_result = std.format(sunrise_find);
+                            Date sunrise_date = new Date(sunrise_find*1000L);
+                            SimpleDateFormat stdd = new SimpleDateFormat("HH:mm");
+                            String sunrise_result = stdd.format(sunrise_date);
                             sunrise.setText(sunrise_result);
 
                             //find sunset
                             JSONObject object6 = jsonObject.getJSONObject("sys");
                             Long sunset_find = object6.getLong("sunset");
-                            String sunset_result = std.format(sunset_find);
+                            Date sunset_date = new Date(sunset_find*1000L);
+                            String sunset_result = stdd.format(sunset_date);
                             sunset.setText(sunset_result);
 
                             //find visibility
                             int visibility_find = jsonObject.getInt("visibility") / 1000;
                             visibility.setText(Integer.toString(visibility_find) + "km");
 
-//                            //find min temperature
-//                            JSONObject object10 = jsonObject.getJSONObject("main");
-//                            int mintemp = object10.getInt("temp_min") ;
-//                            min_temp.setText("Min Temp\n"+mintemp+" °C");
-//
-//                            //find max temperature
-//                            JSONObject object12 = jsonObject.getJSONObject("main");
-//                            int maxtemp = object12.getInt("temp_max");
-//                            max_temp.setText("Max Temp\n"+maxtemp+" °C");
+                            //find min temperature
+                            JSONObject object10 = jsonObject.getJSONObject("main");
+                            int mintemp = object10.getInt("temp_min") ;
+                            min_temp.setText("L: "+mintemp+"°");
+
+                            //find max temperature
+                            JSONObject object12 = jsonObject.getJSONObject("main");
+                            int maxtemp = object12.getInt("temp_max");
+                            max_temp.setText("H: "+maxtemp+"°");
 
                             //find feels
                             JSONObject object13 = jsonObject.getJSONObject("main");
                             int feels_find = object13.getInt("feels_like");
-                            feels.setText("Feel like:"+feels_find+"°C");
+                            feels.setText("Feel like: "+feels_find+"°C");
 
-
+                            getAirQuality(latitude, longitude);
 
                         } catch (JSONException e) {
                             e.printStackTrace();
@@ -282,6 +300,64 @@ public class SearchFragment extends Fragment {
         RequestQueue requestQueue = Volley.newRequestQueue(getActivity());
         requestQueue.add(stringRequest);
 
+    }
+
+    public void getAirQuality(double lat, double lon)
+    {
+        String url ="http://api.openweathermap.org/data/2.5/air_pollution?lat="+lat+"&lon="+lon+"&appid="+APP_ID;
+        StringRequest stringRequest = new StringRequest(Request.Method.GET,url,
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+
+                        try {
+
+                            JSONObject jsonObject = new JSONObject(response);
+                            JSONArray jsonArray = jsonObject.getJSONArray("list");
+                            JSONObject obj = jsonArray.getJSONObject(0);
+                            JSONObject mainObj = obj.getJSONObject("main");
+                            int air_pollution = mainObj.getInt("aqi");
+                            air_quality.setText(getDesAirQuality((air_pollution)));
+
+                            JSONObject componentsObj = obj.getJSONObject("components");
+                            so2.setText(componentsObj.getString("so2"));
+                            co.setText(componentsObj.getString("co"));
+                            pm2_5.setText(componentsObj.getString("pm2_5"));
+
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Toast.makeText(getActivity(),error.getLocalizedMessage(),Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        RequestQueue requestQueue = Volley.newRequestQueue(getActivity());
+        requestQueue.add(stringRequest);
+    }
+
+    private String getDesAirQuality(int air_pollution) {
+        switch (air_pollution) {
+            case 1:
+                return "Good, pollution is low and poses little or no risk.";
+
+            case 2:
+                return "Fair, air quality is acceptable. However, there may be a risk for some people, particularly those who are unusually sensitive to air pollution.";
+
+            case 3:
+                return "Moderate, members of sensitive groups may experience health effects. The general public is less likely to be affected.";
+
+            case 4:
+                return "Poor, sensitive groups may experience serious health issues, and the general public will also be affected.";
+
+            case 5:
+                return "Very Poor, everyone is at risk of experiencing health effects.";
+        }
+        return null;
     }
 
     public void hideSoftKeyboard() {

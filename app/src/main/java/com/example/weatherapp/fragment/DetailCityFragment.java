@@ -1,16 +1,9 @@
 package com.example.weatherapp.fragment;
 
-import android.Manifest;
-import android.content.pm.PackageManager;
-import android.location.Location;
 import android.os.Bundle;
 
-import androidx.annotation.NonNull;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.RecyclerView;
-
 
 import android.view.LayoutInflater;
 import android.view.View;
@@ -25,15 +18,12 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
+import com.example.weatherapp.DetailCityActivity;
 import com.example.weatherapp.R;
 import com.example.weatherapp.adapter.WeatherForecastAdapter;
+import com.example.weatherapp.model.City;
 import com.example.weatherapp.model.WeatherForecast;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.squareup.picasso.Picasso;
-import com.google.android.gms.location.FusedLocationProviderClient;
-import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.tasks.OnSuccessListener;
-
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -41,39 +31,43 @@ import org.json.JSONObject;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
 
 /**
  * A simple {@link Fragment} subclass.
  */
-public class HomeFragment extends Fragment {
+public class DetailCityFragment extends Fragment {
 
     final String APP_ID = "bffca17bcb552b8c8e4f3b82f64cccd2";
-    final int REQUEST_CODE = 100;
-    FusedLocationProviderClient fusedLocationProviderClient;
     ImageView imageView;
-    TextView temptv, time, longitude, latitude, humidity, sunrise, sunset, pressure, wind, country, city_nam, max_temp, min_temp, feels, visibility, co, so2, pm2_5, air_quality;
+    TextView temptv, time, humidity, sunrise, sunset, pressure, wind, country, city_nam, max_temp, min_temp, feels, visibility, co, so2, pm2_5, air_quality;
     RecyclerView rvWeatherForecast;
     private ArrayList<WeatherForecast> weatherForecastArrayList;
     private WeatherForecastAdapter weatherForecastAdapter;
+    private City city;
 
-    public HomeFragment() {
+    public DetailCityFragment() {
         // Required empty public constructor
     }
+
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View view = inflater.inflate(R.layout.fragment_home, container, false);
-        initView(view);
+        View view = inflater.inflate(R.layout.fragment_detail_city, container, false);
+        Bundle receiver = getArguments();
+        if (receiver != null) {
+            city = (City) receiver.getSerializable("object_city");
+            innitView(view);
+        }
         return view;
     }
 
-    private void initView(View view) {
+    private void innitView(View view) {
         imageView = view.findViewById(R.id.imageView);
         temptv = view.findViewById(R.id.textView3);
+//        time = view.findViewById(R.id.textView2);
 
         humidity = view.findViewById(R.id.humidity);
         pressure = view.findViewById(R.id.pressure);
@@ -97,32 +91,12 @@ public class HomeFragment extends Fragment {
         co = view.findViewById(R.id.co);
         pm2_5 = view.findViewById(R.id.pm2_5);
 
-        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(getActivity());
-
-        getWeatherForCurrentLocation();
+        getWeather(city.getCityName());
     }
 
-    private void getWeatherForCurrentLocation() {
-        if(ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-                fusedLocationProviderClient.getLastLocation()
-                    .addOnSuccessListener(new OnSuccessListener<Location>() {
-                        @Override
-                        public void onSuccess(Location location) {
-                            if(location != null) {
-                                getWeather(location.getLatitude(), location.getLongitude());
-                                getAirQuality(location.getLatitude(), location.getLongitude());
-                            }
-                        }
-                    });
-        }
-        else {
-            askPermission();
-        }
-    }
-
-    public void getWeather(double lat, double lon)
+    public void getWeather(String city)
     {
-        String url ="http://api.openweathermap.org/data/2.5/weather?lat="+lat+"&lon="+lon+"&appid="+APP_ID+"&units=metric";
+        String url ="http://api.openweathermap.org/data/2.5/weather?q="+city+"&appid="+APP_ID+"&units=metric";
         StringRequest stringRequest = new StringRequest(Request.Method.GET,url,
                 new Response.Listener<String>() {
                     @Override
@@ -150,18 +124,26 @@ public class HomeFragment extends Fragment {
                             String icon = obj.getString("icon");
                             Picasso.get().load("http://openweathermap.org/img/wn/"+icon+"@2x.png").into(imageView);
 
-//                            //find date & time
-//                            Calendar calendar = Calendar.getInstance();
-//                            SimpleDateFormat std = new SimpleDateFormat("HH:mm a \nE, MMM dd yyyy");
-//                            String date = std.format(calendar.getTime());
-//                            time.setText(date);
+                            //find date & time
+                            //Calendar calendar = Calendar.getInstance();
+                            //SimpleDateFormat std = new SimpleDateFormat("HH:mm a \nE, MMM dd yyyy");
+                            //String date = std.format(calendar.getTime());
+                            //time.setText(date);
+
+                            //find latitude
+                            JSONObject object2 = jsonObject.getJSONObject("coord");
+                            double latitude = object2.getDouble("lat");
+
+                            //find longitude
+                            JSONObject object3 = jsonObject.getJSONObject("coord");
+                            double longitude = object3.getDouble("lon");
 
                             //find humidity
                             JSONObject object4 = jsonObject.getJSONObject("main");
                             int humidity_find = object4.getInt("humidity");
                             humidity.setText(humidity_find+"%");
 
-                            //find sunrise
+                            ///find sunrise
                             JSONObject object5 = jsonObject.getJSONObject("sys");
                             Long sunrise_find = object5.getLong("sunrise");
                             Date sunrise_date = new Date(sunrise_find*1000L);
@@ -190,7 +172,12 @@ public class HomeFragment extends Fragment {
                             int visibility_find = jsonObject.getInt("visibility") / 1000;
                             visibility.setText(Integer.toString(visibility_find) + "km");
 
-                             //find min temperature
+                            //find feels
+                            JSONObject object13 = jsonObject.getJSONObject("main");
+                            int feels_find = object13.getInt("feels_like");
+                            feels.setText("Feel like: "+feels_find+"°C");
+
+                            //find min temperature
                             JSONObject object10 = jsonObject.getJSONObject("main");
                             int mintemp = object10.getInt("temp_min") ;
                             min_temp.setText("L: "+mintemp+"°");
@@ -200,11 +187,7 @@ public class HomeFragment extends Fragment {
                             int maxtemp = object12.getInt("temp_max");
                             max_temp.setText("H: "+maxtemp+"°");
 
-                            //find feels
-                            JSONObject object13 = jsonObject.getJSONObject("main");
-                            int feels_find = object13.getInt("feels_like");
-                            feels.setText("Feel like: "+feels_find+"°C");
-
+                            getAirQuality(latitude, longitude);
 
                         } catch (JSONException e) {
                             e.printStackTrace();
@@ -218,14 +201,14 @@ public class HomeFragment extends Fragment {
             }
         });
 
-        getWeatherForecast(lat, lon);
+        getWeatherForecast(city);
 
         RequestQueue requestQueue = Volley.newRequestQueue(getActivity());
         requestQueue.add(stringRequest);
     }
 
-    private void getWeatherForecast(double lat, double lon) {
-        String url ="http://api.openweathermap.org/data/2.5/forecast?lat="+lat+"&lon="+lon+"&appid="+APP_ID+"&units=metric";
+    private void getWeatherForecast(String city) {
+        String url ="http://api.openweathermap.org/data/2.5/forecast?q="+city+"&appid="+APP_ID+"&units=metric";
         StringRequest stringRequest = new StringRequest(Request.Method.GET,url,
                 new Response.Listener<String>() {
                     @Override
@@ -259,19 +242,7 @@ public class HomeFragment extends Fragment {
 
         RequestQueue requestQueue = Volley.newRequestQueue(getActivity());
         requestQueue.add(stringRequest);
-    }
 
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        if(requestCode == REQUEST_CODE) {
-            if(grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                getWeatherForCurrentLocation();
-            }
-            else {
-                Toast.makeText(getActivity(), "Required Permission",Toast.LENGTH_SHORT).show();
-            }
-        }
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 
     public void getAirQuality(double lat, double lon)
@@ -310,11 +281,6 @@ public class HomeFragment extends Fragment {
 
         RequestQueue requestQueue = Volley.newRequestQueue(getActivity());
         requestQueue.add(stringRequest);
-    }
-
-    private void askPermission() {
-        ActivityCompat.requestPermissions(getActivity(), new String[]
-                {Manifest.permission.ACCESS_FINE_LOCATION}, REQUEST_CODE);
     }
 
     private String getDesAirQuality(int air_pollution) {

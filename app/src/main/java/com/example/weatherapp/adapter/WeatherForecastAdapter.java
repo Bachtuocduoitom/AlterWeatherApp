@@ -46,10 +46,11 @@ public class WeatherForecastAdapter extends RecyclerView.Adapter<WeatherForecast
         holder.wfTemperature.setText(model.getTemperature() + "°C");
         Picasso.get().load("http://openweathermap.org/img/wn/"+model.getIcon()+"@2x.png").into(holder.wfIcon);
         SimpleDateFormat input = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
-        SimpleDateFormat output = new SimpleDateFormat("dd-MM-yyyy hh:mm:ss");
+        SimpleDateFormat output1 = new SimpleDateFormat("EEEE");
+        SimpleDateFormat output2 = new SimpleDateFormat("hh:mm:ss");
         try {
             Date t = input.parse(model.getTime());
-            holder.wfTime.setText(output.format(t));
+            holder.wfTime.setText(output1.format(t) +"\n"+ output2.format(t));
         } catch (ParseException e) {
             e.printStackTrace();
         }

@@ -1,21 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="100dp"
     android:layout_height="wrap_content"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_gravity="center"
     android:layout_marginTop="10dp"
     android:layout_marginBottom="10dp"
-    android:layout_marginLeft="12dp"
-    android:layout_marginRight="12dp"
-    app:cardElevation="6dp"
-    app:cardCornerRadius="10dp"
-    android:background="@android:color/transparent">
+    android:layout_marginLeft="5dp"
+    android:layout_marginRight="5dp"
+   >
 
     <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="#6B0C0C0C">
+        android:layout_height="wrap_content">
         
         <TextView
             android:layout_width="match_parent"
@@ -24,7 +21,7 @@
             android:gravity="center"
             android:padding="4dp"
             android:text="time"
-            android:textColor=" #FFFFFF"
+            android:textColor="@android:color/white"
             android:textAlignment="center"
             />
         <TextView
@@ -36,7 +33,7 @@
             android:text="Temp"
             android:textSize="20sp"
             android:layout_below="@id/wfTime"
-            android:textColor=" #FFFFFF"
+            android:textColor="@android:color/white"
             android:textAlignment="center"
             />
         <ImageView
@@ -52,7 +49,7 @@
 
 
     </RelativeLayout>
-</androidx.cardview.widget.CardView>
+</RelativeLayout>
 
 
 

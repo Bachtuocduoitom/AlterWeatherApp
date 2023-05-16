@@ -12,10 +12,12 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.weatherapp.DetailActivity;
 import com.example.weatherapp.DetailCityActivity;
 import com.example.weatherapp.R;
 import com.example.weatherapp.model.City;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -47,6 +49,7 @@ public class CityAdapter extends RecyclerView.Adapter<CityAdapter.ViewHolder> {
     @Override
     public void onBindViewHolder(@NonNull CityAdapter.ViewHolder holder, int position) {
         final City city = cityList.get(position);
+        int pos = position;
         if (city == null) {
             return;
         }
@@ -55,15 +58,16 @@ public class CityAdapter extends RecyclerView.Adapter<CityAdapter.ViewHolder> {
         holder.rvLayoutItem.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                gotoDetail(city);
+                gotoDetail(cityList, pos);
             }
         });
     }
 
-    private void gotoDetail(City city) {
-        Intent intent = new Intent(context, DetailCityActivity.class);
+    private void gotoDetail(List<City> cityList, int pos) {
+        Intent intent = new Intent(context, DetailActivity.class);
         Bundle bundle = new Bundle();
-        bundle.putSerializable("object_city", city);
+        bundle.putSerializable("list_city", (Serializable) cityList);
+        bundle.putInt("position", pos);
         intent.putExtras(bundle);
         context.startActivity(intent);
     }
