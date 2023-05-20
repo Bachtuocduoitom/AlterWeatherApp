@@ -24,7 +24,7 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
-import com.example.weatherapp.DetailCityActivity;
+import com.example.weatherapp.DetailActivity;
 import com.example.weatherapp.R;
 import com.example.weatherapp.adapter.WeatherForecastAdapter;
 import com.example.weatherapp.database.CityDatabase;
