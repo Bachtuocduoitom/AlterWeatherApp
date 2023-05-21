@@ -3,6 +3,7 @@ package com.example.weatherapp.fragment;
 import android.app.Activity;
 import android.os.Bundle;
 
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -15,6 +16,7 @@ import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -24,26 +26,21 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
-import com.example.weatherapp.DetailCityActivity;
 import com.example.weatherapp.R;
 import com.example.weatherapp.adapter.WeatherForecastAdapter;
 import com.example.weatherapp.database.CityDatabase;
 import com.example.weatherapp.model.City;
 import com.example.weatherapp.model.WeatherForecast;
-import com.squareup.picasso.Picasso;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
-import java.util.TimeZone;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -53,6 +50,7 @@ public class SearchFragment extends Fragment {
     final String APP_ID = "bffca17bcb552b8c8e4f3b82f64cccd2";
     double longitude;
     double latitude;
+    ScrollView bgLayout;
     ImageView imageView;
     AutoCompleteTextView autoCompleteTextView;
     ImageButton imageButton;
@@ -76,12 +74,13 @@ public class SearchFragment extends Fragment {
     }
 
     private void initView(View view) {
+        bgLayout = view.findViewById(R.id.bgLayout);
         autoCompleteTextView = view.findViewById(R.id.autoCompleteTextView);
         imageButton = view.findViewById(R.id.img_button);
         btnAdd = view.findViewById(R.id.btn_add_city);
         imageView = view.findViewById(R.id.imageView);
         temptv = view.findViewById(R.id.textView3);
-       // time = view.findViewById(R.id.textView2);
+        // time = view.findViewById(R.id.textView2);
 
         humidity = view.findViewById(R.id.humidity);
         pressure = view.findViewById(R.id.pressure);
@@ -125,6 +124,13 @@ public class SearchFragment extends Fragment {
 
             }
         });
+        bgLayout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                hideSoftKeyboard();
+            }
+        });
+
     }
 
     private void addMyCity(String cityName) {
@@ -179,13 +185,11 @@ public class SearchFragment extends Fragment {
                             JSONArray jsonArray = jsonObject.getJSONArray("weather");
                             JSONObject obj = jsonArray.getJSONObject(0);
                             String icon = obj.getString("icon");
-                            Picasso.get().load("http://openweathermap.org/img/wn/"+icon+"@2x.png").into(imageView);
+//                            Picasso.get().load("http://openweathermap.org/img/wn/"+icon+"@2x.png").into(imageView);
 
-                            //find date & time
-                            //Calendar calendar = Calendar.getInstance();
-                            //SimpleDateFormat std = new SimpleDateFormat("HH:mm a \nE, MMM dd yyyy");
-                            //String date = std.format(calendar.getTime());
-                            //time.setText(date);
+                            //find weather
+                            int id = obj.getInt("id");
+                            updateBackGround(id, icon);
 
                             //find latitude
                             JSONObject object2 = jsonObject.getJSONObject("coord");
@@ -358,6 +362,42 @@ public class SearchFragment extends Fragment {
                 return "Very Poor, everyone is at risk of experiencing health effects.";
         }
         return null;
+    }
+
+    private void updateBackGround(int id, String icon) {
+        if(200<=id && id <= 232) {
+            imageView.setImageResource(R.drawable.icon_thunderstorm);
+            bgLayout.setBackground(ContextCompat.getDrawable(getActivity(), R.drawable.bg_thunderstorm));
+        } else if (300<= id && id <= 321) {
+            imageView.setImageResource(R.drawable.icon_drizzle);
+            bgLayout.setBackground(ContextCompat.getDrawable(getActivity(), R.drawable.bg_drizzle));
+        } else if (500<= id && id <= 521) {
+            imageView.setImageResource(R.drawable.icon_rain);
+            bgLayout.setBackground(ContextCompat.getDrawable(getActivity(), R.drawable.bg_rain));
+        } else if (600<= id && id <= 622) {
+            imageView.setImageResource(R.drawable.icon_snow);
+            bgLayout.setBackground(ContextCompat.getDrawable(getActivity(), R.drawable.bg_snow));
+        } else if (701<= id && id <= 781) {
+            imageView.setImageResource(R.drawable.icon_fog);
+            bgLayout.setBackground(ContextCompat.getDrawable(getActivity(), R.drawable.bg_fog));
+        } else if (id == 800) {
+            if (icon.contains("d")) {
+                imageView.setImageResource(R.drawable.icon_clear);
+                bgLayout.setBackground(ContextCompat.getDrawable(getActivity(), R.drawable.bg_clear));
+            } else {
+                imageView.setImageResource(R.drawable.icon_moon);
+                bgLayout.setBackground(ContextCompat.getDrawable(getActivity(), R.drawable.bg_night_clear));
+            }
+        } else if (801<= id && id <= 804) {
+            if (icon.contains("d")) {
+                imageView.setImageResource(R.drawable.icon_day_cloudy);
+                bgLayout.setBackground(ContextCompat.getDrawable(getActivity(), R.drawable.bg_cloudy));
+            }
+            else {
+                imageView.setImageResource(R.drawable.icon_night_cloudy);
+                bgLayout.setBackground(ContextCompat.getDrawable(getActivity(), R.drawable.bg_night_cloudy));
+            }
+        }
     }
 
     public void hideSoftKeyboard() {

@@ -16,6 +16,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -29,10 +30,8 @@ import com.example.weatherapp.R;
 import com.example.weatherapp.adapter.WeatherForecastAdapter;
 import com.example.weatherapp.model.WeatherForecast;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.squareup.picasso.Picasso;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.tasks.OnSuccessListener;
 
 
 import org.json.JSONArray;
@@ -41,7 +40,6 @@ import org.json.JSONObject;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
 
 /**
@@ -53,6 +51,7 @@ public class HomeFragment extends Fragment {
     final int REQUEST_CODE = 100;
     FusedLocationProviderClient fusedLocationProviderClient;
     ImageView imageView;
+    ScrollView bgLayout;
     TextView temptv, time, longitude, latitude, humidity, sunrise, sunset, pressure, wind, country, city_nam, max_temp, min_temp, feels, visibility, co, so2, pm2_5, air_quality;
     RecyclerView rvWeatherForecast;
     private ArrayList<WeatherForecast> weatherForecastArrayList;
@@ -72,6 +71,7 @@ public class HomeFragment extends Fragment {
     }
 
     private void initView(View view) {
+        bgLayout = view.findViewById(R.id.bgLayout);
         imageView = view.findViewById(R.id.imageView);
         temptv = view.findViewById(R.id.textView3);
 
@@ -148,13 +148,11 @@ public class HomeFragment extends Fragment {
                             JSONArray jsonArray = jsonObject.getJSONArray("weather");
                             JSONObject obj = jsonArray.getJSONObject(0);
                             String icon = obj.getString("icon");
-                            Picasso.get().load("http://openweathermap.org/img/wn/"+icon+"@2x.png").into(imageView);
+//                            Picasso.get().load("http://openweathermap.org/img/wn/"+icon+"@2x.png").into(imageView);
 
-//                            //find date & time
-//                            Calendar calendar = Calendar.getInstance();
-//                            SimpleDateFormat std = new SimpleDateFormat("HH:mm a \nE, MMM dd yyyy");
-//                            String date = std.format(calendar.getTime());
-//                            time.setText(date);
+                            //find weather
+                            int id = obj.getInt("id");
+                            updateBackGround(id, icon);
 
                             //find humidity
                             JSONObject object4 = jsonObject.getJSONObject("main");
@@ -315,6 +313,42 @@ public class HomeFragment extends Fragment {
     private void askPermission() {
         ActivityCompat.requestPermissions(getActivity(), new String[]
                 {Manifest.permission.ACCESS_FINE_LOCATION}, REQUEST_CODE);
+    }
+
+    private void updateBackGround(int id, String icon) {
+        if(200<=id && id <= 232) {
+            imageView.setImageResource(R.drawable.icon_thunderstorm);
+            bgLayout.setBackground(ContextCompat.getDrawable(getActivity(), R.drawable.bg_thunderstorm));
+        } else if (300<= id && id <= 321) {
+            imageView.setImageResource(R.drawable.icon_drizzle);
+            bgLayout.setBackground(ContextCompat.getDrawable(getActivity(), R.drawable.bg_drizzle));
+        } else if (500<= id && id <= 521) {
+            imageView.setImageResource(R.drawable.icon_rain);
+            bgLayout.setBackground(ContextCompat.getDrawable(getActivity(), R.drawable.bg_rain));
+        } else if (600<= id && id <= 622) {
+            imageView.setImageResource(R.drawable.icon_snow);
+            bgLayout.setBackground(ContextCompat.getDrawable(getActivity(), R.drawable.bg_snow));
+        } else if (701<= id && id <= 781) {
+            imageView.setImageResource(R.drawable.icon_fog);
+            bgLayout.setBackground(ContextCompat.getDrawable(getActivity(), R.drawable.bg_fog));
+        } else if (id == 800) {
+            if (icon.contains("d")) {
+                imageView.setImageResource(R.drawable.icon_clear);
+                bgLayout.setBackground(ContextCompat.getDrawable(getActivity(), R.drawable.bg_clear));
+            } else {
+                imageView.setImageResource(R.drawable.icon_moon);
+                bgLayout.setBackground(ContextCompat.getDrawable(getActivity(), R.drawable.bg_night_clear));
+            }
+        } else if (801<= id && id <= 804) {
+            if (icon.contains("d")) {
+                imageView.setImageResource(R.drawable.icon_day_cloudy);
+                bgLayout.setBackground(ContextCompat.getDrawable(getActivity(), R.drawable.bg_cloudy));
+            }
+            else {
+                imageView.setImageResource(R.drawable.icon_night_cloudy);
+                bgLayout.setBackground(ContextCompat.getDrawable(getActivity(), R.drawable.bg_night_cloudy));
+            }
+        }
     }
 
     private String getDesAirQuality(int air_pollution) {

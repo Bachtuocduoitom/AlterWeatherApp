@@ -47,7 +47,7 @@ public class WeatherForecastAdapter extends RecyclerView.Adapter<WeatherForecast
         Picasso.get().load("http://openweathermap.org/img/wn/"+model.getIcon()+"@2x.png").into(holder.wfIcon);
         SimpleDateFormat input = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
         SimpleDateFormat output1 = new SimpleDateFormat("EEEE");
-        SimpleDateFormat output2 = new SimpleDateFormat("hh:mm:ss");
+        SimpleDateFormat output2 = new SimpleDateFormat("hh:mm aa");
         try {
             Date t = input.parse(model.getTime());
             holder.wfTime.setText(output1.format(t) +"\n"+ output2.format(t));

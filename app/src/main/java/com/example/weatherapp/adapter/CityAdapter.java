@@ -13,7 +13,6 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.weatherapp.DetailActivity;
-import com.example.weatherapp.DetailCityActivity;
 import com.example.weatherapp.R;
 import com.example.weatherapp.model.City;
 
