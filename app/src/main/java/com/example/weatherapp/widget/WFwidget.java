@@ -2,6 +2,7 @@ package com.example.weatherapp.widget;
 
 import android.annotation.SuppressLint;
 import android.app.PendingIntent;
+import android.app.TaskStackBuilder;
 import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProvider;
 import android.content.ComponentName;
@@ -18,6 +19,7 @@ import com.android.volley.toolbox.Volley;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.target.AppWidgetTarget;
 import com.bumptech.glide.request.transition.Transition;
+import com.example.weatherapp.DetailActivity;
 import com.example.weatherapp.MainActivity;
 import com.example.weatherapp.R;
 import com.example.weatherapp.model.WeatherForecast;
@@ -31,6 +33,9 @@ import org.json.JSONObject;
  */
 public class WFwidget extends AppWidgetProvider {
     public static final String WIDGET_IDS_KEY ="mywidgetproviderwidgetids";
+
+    public static final String ACTION_WIDGET_CLICK = "com.example.weatherapp.widget.WIDGET_CLICK";
+
     public static boolean isCitySet = false;
 
     static void updateAppWidget(Context context, AppWidgetManager appWidgetManager,
@@ -89,37 +94,29 @@ public class WFwidget extends AppWidgetProvider {
     @Override
     public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
         if (appWidgetIds == null || appWidgetIds.length == 0) {
-            return;
-        }
-
-        if (!isCitySet) {
-            Toast.makeText(context, "Please configure the widget", Toast.LENGTH_SHORT).show();
+            Toast.makeText(context, "Error", Toast.LENGTH_SHORT ).show();
             return;
         }
 
         for (int appWidgetId : appWidgetIds) {
             try {
                 RemoteViews views = new RemoteViews(context.getPackageName(),R.layout.w_fwidget);
-                Intent updateIntent = new Intent(context, WFwidget.class);
-                updateIntent.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
-                updateIntent.putExtra(WFwidget.WIDGET_IDS_KEY, appWidgetIds);
-                PendingIntent pendingIntent = PendingIntent.getBroadcast(
-                        context, 0, updateIntent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
-
-                views.setOnClickPendingIntent(R.id.widget_image, pendingIntent);
-
-                String city = AppWidgetConfigurationActivity.loadTitlePref(context, appWidgetId);
 
                 Intent configIntent = new Intent(context, MainActivity.class);
-
-                configIntent.addCategory("android.intent.category.LAUNCHER");
-                configIntent.setAction("android.intent.action.MAIN");
-
-                PendingIntent configPendingIntent = PendingIntent.getActivity(context, 1, configIntent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
-
+                configIntent.setAction(WFwidget.ACTION_WIDGET_CLICK);
+                configIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                TaskStackBuilder stackBuilder = TaskStackBuilder.create(context);
+                stackBuilder.addNextIntentWithParentStack(configIntent);
+                PendingIntent configPendingIntent = PendingIntent.getActivity(context, 69 , configIntent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
                 views.setOnClickPendingIntent(R.id.widget_container, configPendingIntent);
-
-                updateAppWidget(context, appWidgetManager, appWidgetId, city);
+                appWidgetManager.updateAppWidget(appWidgetId, views);
+                if (!isCitySet) {
+                    Toast.makeText(context, "Please configure the widget", Toast.LENGTH_SHORT).show();
+                    return;
+                } else {
+                    String city = AppWidgetConfigurationActivity.loadTitlePref(context, appWidgetId);
+                    updateAppWidget(context, appWidgetManager, appWidgetId, city);
+                }
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
@@ -130,7 +127,8 @@ public class WFwidget extends AppWidgetProvider {
     public void onReceive(Context context, Intent intent) {
         super.onReceive(context, intent);
         if (intent.getAction().equals(AppWidgetManager.ACTION_APPWIDGET_UPDATE) ||
-                intent.getAction().equals(WIDGET_IDS_KEY)) {
+                intent.getAction().equals(WIDGET_IDS_KEY) ||
+                intent.getAction().equals(WFwidget.ACTION_WIDGET_CLICK)) {
             int[] appWidgetIds = intent.getIntArrayExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS);
             onUpdate(context, AppWidgetManager.getInstance(context), appWidgetIds);
         }
@@ -150,51 +148,51 @@ public class WFwidget extends AppWidgetProvider {
         final String API_KEY = "bffca17bcb552b8c8e4f3b82f64cccd2";
         String url = "https://api.openweathermap.org/data/2.5/weather?q=" + city + "&appid=" + API_KEY;
 
-            JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, url, null,
-                    response -> {
-                        try {
-                            JSONArray jsonArray = response.getJSONArray("weather");
-                            JSONObject weatherObj = jsonArray.getJSONObject(0);
-                            JSONObject mainObj = response.getJSONObject("main");
-                            JSONObject coorObj = response.getJSONObject("coord");
-                            JSONObject sysObj = response.getJSONObject("sys");
-                            String description = weatherObj.getString("description");
-                            String main = weatherObj.getString("main");
-                            String temperature = mainObj.getString("temp");
-                            boolean night = response.getLong("dt") > sysObj.getLong("sunset");
-                            description = description.substring(0, 1).toUpperCase() + description.substring(1);
-                            double temp = Double.parseDouble(temperature);
-                            temp -= 273.15;
-                            double lat_find = coorObj.getDouble("lat");
-                            double long_find = coorObj.getDouble("lon");
-                            String icon = weatherObj.getString("icon");
-                            String aqiUrl = "https://api.openweathermap.org/data/2.5/air_pollution?lat=" + lat_find + "&lon=" + long_find + "&appid=" + API_KEY;
-                            @SuppressLint("DefaultLocale") String finalTemperature = String.format("%.1f", temp);
-                            String finalDescription = description;
-                            JsonObjectRequest aqiJsonObjectRequest = new JsonObjectRequest(Request.Method.GET, aqiUrl, null,
-                                    aqiResponse -> {
-                                        try {
-                                            String airQualityIndex = aqiResponse.getJSONArray("list").getJSONObject(0).getJSONObject("main").getString("aqi");
-                                            airQualityIndex = getAqiCategory(Double.parseDouble(airQualityIndex));
-                                            WeatherForecast wf = new WeatherForecast(city, finalTemperature, finalDescription, icon, airQualityIndex, main, night);
-                                            callback.onSuccess(wf);
-                                        } catch (JSONException e) {
-                                            e.printStackTrace();
-                                        }
-                                    }, error -> Toast.makeText(context, error.getLocalizedMessage(), Toast.LENGTH_SHORT).show());
-                            RequestQueue aqiQueue = Volley.newRequestQueue(context);
-                            aqiQueue.add(aqiJsonObjectRequest);
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
-                    }, error -> {
-                        String errorMessage = error != null ? error.getLocalizedMessage() : "Unknown error";
-                        if (errorMessage != null && !errorMessage.isEmpty()) {
-                            Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show();
-                        } else {
-                            Toast.makeText(context, "Unknown", Toast.LENGTH_SHORT).show();
-                        }
-                    });
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, url, null,
+                response -> {
+                    try {
+                        JSONArray jsonArray = response.getJSONArray("weather");
+                        JSONObject weatherObj = jsonArray.getJSONObject(0);
+                        JSONObject mainObj = response.getJSONObject("main");
+                        JSONObject coorObj = response.getJSONObject("coord");
+                        JSONObject sysObj = response.getJSONObject("sys");
+                        String description = weatherObj.getString("description");
+                        String main = weatherObj.getString("main");
+                        String temperature = mainObj.getString("temp");
+                        boolean night = response.getLong("dt") > sysObj.getLong("sunset");
+                        description = description.substring(0, 1).toUpperCase() + description.substring(1);
+                        double temp = Double.parseDouble(temperature);
+                        temp -= 273.15;
+                        double lat_find = coorObj.getDouble("lat");
+                        double long_find = coorObj.getDouble("lon");
+                        String icon = weatherObj.getString("icon");
+                        String aqiUrl = "https://api.openweathermap.org/data/2.5/air_pollution?lat=" + lat_find + "&lon=" + long_find + "&appid=" + API_KEY;
+                        @SuppressLint("DefaultLocale") String finalTemperature = String.format("%.1f", temp);
+                        String finalDescription = description;
+                        JsonObjectRequest aqiJsonObjectRequest = new JsonObjectRequest(Request.Method.GET, aqiUrl, null,
+                                aqiResponse -> {
+                                    try {
+                                        String airQualityIndex = aqiResponse.getJSONArray("list").getJSONObject(0).getJSONObject("main").getString("aqi");
+                                        airQualityIndex = getAqiCategory(Double.parseDouble(airQualityIndex));
+                                        WeatherForecast wf = new WeatherForecast(city, finalTemperature, finalDescription, icon, airQualityIndex, main, night);
+                                        callback.onSuccess(wf);
+                                    } catch (JSONException e) {
+                                        e.printStackTrace();
+                                    }
+                                }, error -> Toast.makeText(context, error.getLocalizedMessage(), Toast.LENGTH_SHORT).show());
+                        RequestQueue aqiQueue = Volley.newRequestQueue(context);
+                        aqiQueue.add(aqiJsonObjectRequest);
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }, error -> {
+            String errorMessage = error != null ? error.getLocalizedMessage() : "Unknown error";
+            if (errorMessage != null && !errorMessage.isEmpty()) {
+                Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(context, "Unknown", Toast.LENGTH_SHORT).show();
+            }
+        });
         RequestQueue queue = Volley.newRequestQueue(context);
         queue.add(jsonObjectRequest);
     }
