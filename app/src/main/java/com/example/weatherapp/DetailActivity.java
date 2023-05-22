@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.widget.Toast;
 
 import com.example.weatherapp.adapter.DetailCityViewPagerAdapter;
+import com.example.weatherapp.database.CityDatabase;
 import com.example.weatherapp.model.City;
 
 import java.util.List;
@@ -26,7 +27,7 @@ public class DetailActivity extends AppCompatActivity {
         if (bundle == null) {
             return;
         }
-        listCity = (List<City>) bundle.get("list_city");
+        listCity = CityDatabase.getInstance(this).cityDAO().getListCity();
         position = bundle.getInt("position");
 
         viewPager = findViewById(R.id.view_pager_detail_city);

@@ -12,6 +12,7 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.RecyclerView;
 
 
+import android.os.Looper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -29,6 +30,10 @@ import com.android.volley.toolbox.Volley;
 import com.example.weatherapp.R;
 import com.example.weatherapp.adapter.WeatherForecastAdapter;
 import com.example.weatherapp.model.WeatherForecast;
+import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
+import com.google.android.gms.location.Priority;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
@@ -49,6 +54,7 @@ public class HomeFragment extends Fragment {
 
     final String APP_ID = "bffca17bcb552b8c8e4f3b82f64cccd2";
     final int REQUEST_CODE = 100;
+    LocationRequest locationRequest;
     FusedLocationProviderClient fusedLocationProviderClient;
     ImageView imageView;
     ScrollView bgLayout;
@@ -97,23 +103,27 @@ public class HomeFragment extends Fragment {
         co = view.findViewById(R.id.co);
         pm2_5 = view.findViewById(R.id.pm2_5);
 
-        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(getActivity());
+        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(getActivity());locationRequest = new LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 1000)
+                .setWaitForAccurateLocation(false)
+                .setMinUpdateIntervalMillis(500)
+                .setMaxUpdateDelayMillis(1000)
+                .build();
 
         getWeatherForCurrentLocation();
     }
 
     private void getWeatherForCurrentLocation() {
         if(ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-                fusedLocationProviderClient.getLastLocation()
-                    .addOnSuccessListener(new OnSuccessListener<Location>() {
-                        @Override
-                        public void onSuccess(Location location) {
-                            if(location != null) {
-                                getWeather(location.getLatitude(), location.getLongitude());
-                                getAirQuality(location.getLatitude(), location.getLongitude());
-                            }
-                        }
-                    });
+            fusedLocationProviderClient.requestLocationUpdates(locationRequest, new LocationCallback() {
+                @Override
+                public void onLocationResult(@NonNull LocationResult location) {
+                    super.onLocationResult(location);
+                    if(location != null) {
+                        getWeather(location.getLastLocation().getLatitude(), location.getLastLocation().getLongitude());
+                        getAirQuality(location.getLastLocation().getLatitude(), location.getLastLocation().getLongitude());
+                    }
+                }
+            }, Looper.getMainLooper());
         }
         else {
             askPermission();
@@ -188,7 +198,7 @@ public class HomeFragment extends Fragment {
                             int visibility_find = jsonObject.getInt("visibility") / 1000;
                             visibility.setText(Integer.toString(visibility_find) + "km");
 
-                             //find min temperature
+                            //find min temperature
                             JSONObject object10 = jsonObject.getJSONObject("main");
                             int mintemp = object10.getInt("temp_min") ;
                             min_temp.setText("L: "+mintemp+"°");

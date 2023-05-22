@@ -8,14 +8,14 @@
 
     <!-- TODO: Update blank fragment layout -->
     <ScrollView
+        android:id="@+id/bgLayout"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
-
-
+        android:layout_height="match_parent"
+        android:background="@drawable/bg_cloudy">
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="@drawable/bg_day_2"
+
             android:scrollbarSize="8dp">
 
             <androidx.constraintlayout.widget.ConstraintLayout

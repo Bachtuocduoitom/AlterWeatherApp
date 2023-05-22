@@ -12,5 +12,4 @@
     <item android:id="@+id/action_my_city"
         android:title="@string/action_my_city"
         android:icon="@drawable/icon_format_list_bulleted_24"/>
-
 </menu>
