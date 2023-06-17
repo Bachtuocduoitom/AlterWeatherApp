@@ -86,7 +86,7 @@ public class MyCityFragment extends Fragment {
         updateListCity();
     }
 
-
+    //update list city
     private void updateListCity() {
         getParentFragmentManager().setFragmentResultListener("upd_my_city", getActivity(), new FragmentResultListener() {
             @Override

@@ -185,7 +185,6 @@ public class SearchFragment extends Fragment {
                             JSONArray jsonArray = jsonObject.getJSONArray("weather");
                             JSONObject obj = jsonArray.getJSONObject(0);
                             String icon = obj.getString("icon");
-//                            Picasso.get().load("http://openweathermap.org/img/wn/"+icon+"@2x.png").into(imageView);
 
                             //find weather
                             int id = obj.getInt("id");
@@ -268,6 +267,7 @@ public class SearchFragment extends Fragment {
         requestQueue.add(stringRequest);
     }
 
+    //get weather forecast
     private void getWeatherForecast(String city) {
         String url ="http://api.openweathermap.org/data/2.5/forecast?q="+city+"&appid="+APP_ID+"&units=metric";
         StringRequest stringRequest = new StringRequest(Request.Method.GET,url,
@@ -306,6 +306,7 @@ public class SearchFragment extends Fragment {
 
     }
 
+    //get air quality
     public void getAirQuality(double lat, double lon)
     {
         String url ="http://api.openweathermap.org/data/2.5/air_pollution?lat="+lat+"&lon="+lon+"&appid="+APP_ID;
@@ -344,6 +345,7 @@ public class SearchFragment extends Fragment {
         requestQueue.add(stringRequest);
     }
 
+    //get describe air quality
     private String getDesAirQuality(int air_pollution) {
         switch (air_pollution) {
             case 1:
@@ -364,6 +366,7 @@ public class SearchFragment extends Fragment {
         return null;
     }
 
+    //change background
     private void updateBackGround(int id, String icon) {
         if(200<=id && id <= 232) {
             imageView.setImageResource(R.drawable.icon_thunderstorm);
@@ -400,6 +403,7 @@ public class SearchFragment extends Fragment {
         }
     }
 
+    //hide keyboard
     public void hideSoftKeyboard() {
         try {
             InputMethodManager inputMethodManager = (InputMethodManager) getActivity().getSystemService(Activity.INPUT_METHOD_SERVICE);
@@ -409,6 +413,7 @@ public class SearchFragment extends Fragment {
         }
     }
 
+    //destroy
     @Override
     public void onDestroy() {
         super.onDestroy();

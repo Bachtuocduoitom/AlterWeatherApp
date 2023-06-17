@@ -34,7 +34,7 @@ public class DetailActivity extends AppCompatActivity {
         DetailCityViewPagerAdapter viewPagerAdapter = new DetailCityViewPagerAdapter(this, listCity);
         viewPager.setAdapter(viewPagerAdapter);
         viewPager.setCurrentItem(position);
-        Toast.makeText(this, "this is " + position + listCity.get(position).getCityName(),Toast.LENGTH_SHORT).show();
+
 
     }
 

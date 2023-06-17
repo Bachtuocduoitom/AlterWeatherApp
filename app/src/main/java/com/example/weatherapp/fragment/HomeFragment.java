@@ -1,10 +1,14 @@
 package com.example.weatherapp.fragment;
 
 import android.Manifest;
+import android.app.AlertDialog;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Bundle;
 
+import androidx.activity.result.ActivityResultCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -103,32 +107,52 @@ public class HomeFragment extends Fragment {
         co = view.findViewById(R.id.co);
         pm2_5 = view.findViewById(R.id.pm2_5);
 
-        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(getActivity());locationRequest = new LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 1000)
+        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(getActivity());
+
+        locationRequest = new LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 1000)
                 .setWaitForAccurateLocation(false)
                 .setMinUpdateIntervalMillis(500)
                 .setMaxUpdateDelayMillis(1000)
                 .build();
 
-        getWeatherForCurrentLocation();
+        requestPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION);
+
     }
 
-    private void getWeatherForCurrentLocation() {
-        if(ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            fusedLocationProviderClient.requestLocationUpdates(locationRequest, new LocationCallback() {
+    private ActivityResultLauncher<String> requestPermissionLauncher = registerForActivityResult(
+            new ActivityResultContracts.RequestPermission(),
+            new ActivityResultCallback<Boolean>() {
                 @Override
-                public void onLocationResult(@NonNull LocationResult location) {
-                    super.onLocationResult(location);
-                    if(location != null) {
-                        getWeather(location.getLastLocation().getLatitude(), location.getLastLocation().getLongitude());
-                        getAirQuality(location.getLastLocation().getLatitude(), location.getLastLocation().getLongitude());
+                public void onActivityResult(Boolean result) {
+                    if (result) {
+                        if (ActivityCompat.checkSelfPermission(getActivity(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(getActivity(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                            // TODO: Consider calling
+                            //    ActivityCompat#requestPermissions
+                            // here to request the missing permissions, and then overriding
+                            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                            //                                          int[] grantResults)
+                            // to handle the case where the user grants the permission. See the documentation
+                            // for ActivityCompat#requestPermissions for more details.
+
+                            return;
+                        }
+                        //fuse location
+                        fusedLocationProviderClient.requestLocationUpdates(locationRequest, new LocationCallback() {
+                            @Override
+                            public void onLocationResult(@NonNull LocationResult location) {
+                                super.onLocationResult(location);
+                                if (location != null) {
+                                    getWeather(location.getLastLocation().getLatitude(), location.getLastLocation().getLongitude());
+                                    getAirQuality(location.getLastLocation().getLatitude(), location.getLastLocation().getLongitude());
+                                }
+                            }
+                        }, Looper.getMainLooper());
+                    } else {
+                        Toast.makeText(getActivity(), "Required Permission",Toast.LENGTH_SHORT).show();
                     }
                 }
-            }, Looper.getMainLooper());
-        }
-        else {
-            askPermission();
-        }
-    }
+            }
+    );
 
     public void getWeather(double lat, double lon)
     {
@@ -232,6 +256,7 @@ public class HomeFragment extends Fragment {
         requestQueue.add(stringRequest);
     }
 
+    //get weather forecast
     private void getWeatherForecast(double lat, double lon) {
         String url ="http://api.openweathermap.org/data/2.5/forecast?lat="+lat+"&lon="+lon+"&appid="+APP_ID+"&units=metric";
         StringRequest stringRequest = new StringRequest(Request.Method.GET,url,
@@ -269,19 +294,8 @@ public class HomeFragment extends Fragment {
         requestQueue.add(stringRequest);
     }
 
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        if(requestCode == REQUEST_CODE) {
-            if(grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                getWeatherForCurrentLocation();
-            }
-            else {
-                Toast.makeText(getActivity(), "Required Permission",Toast.LENGTH_SHORT).show();
-            }
-        }
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-    }
 
+    //get air quality
     public void getAirQuality(double lat, double lon)
     {
         String url ="http://api.openweathermap.org/data/2.5/air_pollution?lat="+lat+"&lon="+lon+"&appid="+APP_ID;
@@ -325,6 +339,7 @@ public class HomeFragment extends Fragment {
                 {Manifest.permission.ACCESS_FINE_LOCATION}, REQUEST_CODE);
     }
 
+    //change background
     private void updateBackGround(int id, String icon) {
         if(200<=id && id <= 232) {
             imageView.setImageResource(R.drawable.icon_thunderstorm);
@@ -361,6 +376,7 @@ public class HomeFragment extends Fragment {
         }
     }
 
+    //get describe air quality
     private String getDesAirQuality(int air_pollution) {
         switch (air_pollution) {
             case 1:
@@ -381,6 +397,7 @@ public class HomeFragment extends Fragment {
         return null;
     }
 
+    //destroy
     @Override
     public void onDestroy() {
         super.onDestroy();

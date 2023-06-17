@@ -7,6 +7,7 @@ import androidx.viewpager2.widget.ViewPager2;
 
 import com.example.weatherapp.adapter.ViewPagerAdapter;
 
+import com.example.weatherapp.fragment.HomeFragment;
 import com.google.android.gms.location.FusedLocationProviderClient;
 
 import android.Manifest;
@@ -53,6 +54,7 @@ import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
 
+    final int REQUEST_CODE = 100;
     private BottomNavigationView navigationView;
     private ViewPager2 viewPager;
     private ViewPagerAdapter viewPagerAdapter;
@@ -90,6 +92,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
+
 
     private void setUpViewPager() {
         viewPagerAdapter = new ViewPagerAdapter(this);

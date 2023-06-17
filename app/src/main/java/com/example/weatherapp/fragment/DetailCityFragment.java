@@ -69,7 +69,6 @@ public class DetailCityFragment extends Fragment {
         bgLayout = view.findViewById(R.id.bgLayout);
         imageView = view.findViewById(R.id.imageView);
         temptv = view.findViewById(R.id.textView3);
-//        time = view.findViewById(R.id.textView2);
 
         humidity = view.findViewById(R.id.humidity);
         pressure = view.findViewById(R.id.pressure);
@@ -124,7 +123,6 @@ public class DetailCityFragment extends Fragment {
                             JSONArray jsonArray = jsonObject.getJSONArray("weather");
                             JSONObject obj = jsonArray.getJSONObject(0);
                             String icon = obj.getString("icon");
-//                            Picasso.get().load("http://openweathermap.org/img/wn/"+icon+"@2x.png").into(imageView);
 
                             //find weather
                             int id = obj.getInt("id");
@@ -207,6 +205,7 @@ public class DetailCityFragment extends Fragment {
         requestQueue.add(stringRequest);
     }
 
+    //get weather forecast
     private void getWeatherForecast(String city) {
         String url ="http://api.openweathermap.org/data/2.5/forecast?q="+city+"&appid="+APP_ID+"&units=metric";
         StringRequest stringRequest = new StringRequest(Request.Method.GET,url,
@@ -245,6 +244,7 @@ public class DetailCityFragment extends Fragment {
 
     }
 
+    //get air quality
     public void getAirQuality(double lat, double lon)
     {
         String url ="http://api.openweathermap.org/data/2.5/air_pollution?lat="+lat+"&lon="+lon+"&appid="+APP_ID;
@@ -283,6 +283,7 @@ public class DetailCityFragment extends Fragment {
         requestQueue.add(stringRequest);
     }
 
+    //change background
     private void updateBackGround(int id, String icon) {
         if(200<=id && id <= 232) {
             imageView.setImageResource(R.drawable.icon_thunderstorm);
@@ -319,6 +320,7 @@ public class DetailCityFragment extends Fragment {
         }
     }
 
+    //get describe air quality
     private String getDesAirQuality(int air_pollution) {
         switch (air_pollution) {
             case 1:
@@ -339,6 +341,7 @@ public class DetailCityFragment extends Fragment {
         return null;
     }
 
+    //destroy
     @Override
     public void onDestroy() {
         super.onDestroy();
